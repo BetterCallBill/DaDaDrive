@@ -9,7 +9,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using System.Security.Claims;
 namespace API.Controllers
 {
     [Authorize]
@@ -27,28 +27,31 @@ namespace API.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers()
         {
-            // var users = await _userRepository.GetUsersAsync();
-            // var usersToReturn = _mapper.Map<IEnumerable<MemberDto>>(users);
-
-            // use repository:
             var users = await _userRepository.GetMembersAsync();
 
             return Ok(users);
         }
-
-        // // api/users/{id}
-        // [Authorize]
-        // [HttpGet("{id}")]
-        // public async Task<ActionResult<AppUser>> GetUser(int id)
-        // {
-        //     return await _userRepository.GetUserByIdAsync(id);
-        // }
 
         [Authorize]
         [HttpGet("{username}")]
         public async Task<ActionResult<MemberDto>> GetUserByUsername(string username)
         {
             return await _userRepository.GetMemberAsync(username);
+        }
+
+        [HttpPut]
+        public async Task<ActionResult> UpdateUser(MemberUpdateDto memberUpdateDto)
+        {
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userRepository.GetUserByUsernameAsync(username);
+
+            _mapper.Map(memberUpdateDto, user);
+
+            _userRepository.Update(user);
+
+            if (await _userRepository.SaveAllAsync()) return NoContent();
+
+            return BadRequest("Failed to update user");
         }
     }
 }
