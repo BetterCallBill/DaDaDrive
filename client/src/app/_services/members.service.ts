@@ -27,7 +27,7 @@ export class MembersService {
 
   getMember(username: string) {
     const member = this.members.find(x => x.username === username);
-    if(member !== undefined) return of(member);
+    if (member !== undefined) return of(member);
 
     return this.http.get<Member>(this.baseUrl + 'users/' + username);
   }
@@ -39,5 +39,10 @@ export class MembersService {
         this.members[index] = member;
       })
     );
+  }
+
+  // Send http request
+  setMainPhoto(photoId: number) {
+    return this.http.put(this.baseUrl + 'user/set-main-photo/' + photoId, {});
   }
 }
