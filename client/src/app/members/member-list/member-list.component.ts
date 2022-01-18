@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ToastrService } from 'ngx-toastr';
 import { Observable } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { Member } from 'src/app/_models/member';
@@ -48,4 +49,6 @@ export class MemberListComponent implements OnInit {
 		this.userParams = this.memberService.resetUserParams();
 		this.loadMembers();
 	}
+
+
 }
