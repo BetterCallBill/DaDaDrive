@@ -15,17 +15,29 @@ import { MessageService } from 'src/app/_services/message.service';
 	styleUrls: ['./member-detail.component.css'],
 })
 export class MemberDetailComponent implements OnInit {
-	@ViewChild('memberTabs') memberTabs: TabsetComponent;
+	// accessed member-detail.component.html
+	// <tabset class="member-tabset" #memberTabs >
+	@ViewChild('memberTabs', { static: true }) memberTabs: TabsetComponent;
 	member: Member;
 	galleryOptions: NgxGalleryOptions[];
 	galleryImages: NgxGalleryImage[];
 	activeTab: TabDirective;
 	messages: Message[] = [];
 
-	constructor(private memberService: MembersService, private route: ActivatedRoute, private messageService: MessageService) {}
+	constructor(
+		private memberService: MembersService,
+		private route: ActivatedRoute,
+		private messageService: MessageService
+	) {}
 
 	ngOnInit(): void {
-		this.loadMember();
+		this.route.data.subscribe((data) => {
+			this.member = data.member;
+		});
+
+		this.route.queryParams.subscribe((params) => {
+			params.tab ? this.selectTab(params.tab) : this.selectTab(0);
+		});
 
 		this.galleryOptions = [
 			{
@@ -37,6 +49,8 @@ export class MemberDetailComponent implements OnInit {
 				preview: false,
 			},
 		];
+
+		this.galleryImages = this.getImages();
 	}
 
 	getImages(): NgxGalleryImage[] {
@@ -52,13 +66,6 @@ export class MemberDetailComponent implements OnInit {
 		return imageUrls;
 	}
 
-	loadMember() {
-		this.memberService.getMember(this.route.snapshot.paramMap.get('username')).subscribe((member) => {
-			this.member = member;
-			this.galleryImages = this.getImages();
-		});
-	}
-
 	loadMessages() {
 		this.messageService.getMessageThread(this.member.username).subscribe((messages) => {
 			this.messages = messages;
@@ -66,10 +73,14 @@ export class MemberDetailComponent implements OnInit {
 	}
 
 	onTabActivated(data: TabDirective) {
-    this.activeTab = data;
-    
-    if (this.activeTab.heading === 'Messages' && this.messages.length === 0) {
-      this.loadMessages();
-    }
+		this.activeTab = data;
+
+		if (this.activeTab.heading === 'Messages' && this.messages.length === 0) {
+			this.loadMessages();
+		}
+	}
+
+	selectTab(tabId: number) {
+		this.memberTabs.tabs[tabId].active = true;
 	}
 }
