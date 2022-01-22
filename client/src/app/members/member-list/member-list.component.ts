@@ -19,7 +19,10 @@ export class MemberListComponent implements OnInit {
 	pagination: Pagination;
 	userParams: UserParams;
 	user: User;
-	genderList = [{value: 'male', display: 'Males'}, {value: 'female', display: 'Females'}]
+	genderList = [
+		{ value: 'male', display: 'Males' },
+		{ value: 'female', display: 'Females' },
+	];
 
 	constructor(private memberService: MembersService) {
 		this.userParams = this.memberService.getUserParams();
@@ -33,22 +36,25 @@ export class MemberListComponent implements OnInit {
 	loadMembers() {
 		this.memberService.setUserParams(this.userParams);
 
-		this.memberService.getMembers(this.userParams).subscribe(response => {
+		this.memberService.getMembers(this.userParams).subscribe((response) => {
 			this.members = response.result;
 			this.pagination = response.pagination;
-		})
+		});
 	}
 
 	pageChanged(event: any) {
-		this.userParams.PageNumber = event.page;
-		this.memberService.setUserParams(this.userParams);
-		this.loadMembers();
+		if (this.userParams.PageNumber !== event.page) {
+			this.userParams.PageNumber = event.page;
+			this.memberService.setUserParams(this.userParams);
+			this.loadMembers();
+		}
+		// this.userParams.PageNumber = event.page;
+		// this.memberService.setUserParams(this.userParams);
+		// this.loadMembers();
 	}
 
 	resetFilters() {
 		this.userParams = this.memberService.resetUserParams();
 		this.loadMembers();
 	}
-
-
 }

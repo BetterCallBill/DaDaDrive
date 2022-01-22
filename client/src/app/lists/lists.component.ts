@@ -11,7 +11,7 @@ import { MembersService } from '../_services/members.service';
 export class ListsComponent implements OnInit {
 	members: Partial<Member[]>;
 	predicate = 'liked';
-	pageNUmber = 1;
+	pageNumber = 1;
 	pageSize = 6;
 	pagination: Pagination;
 
@@ -23,7 +23,7 @@ export class ListsComponent implements OnInit {
 
 	loadLikes() {
 		this.memberService
-			.getLikes(this.predicate, this.pageNUmber, this.pageSize)
+			.getLikes(this.predicate, this.pageNumber, this.pageSize)
 			.subscribe((response) => {
 				// response type: PaginationResult
 				this.members = response.result;
@@ -32,7 +32,9 @@ export class ListsComponent implements OnInit {
 	}
 
 	pageChanged(event: any) {
-		this.pageNUmber = event.page;
-		this.loadLikes();
+		if (this.pageNumber !== event.page) {
+			this.pageNumber = event.page;
+			this.loadLikes();
+		}
 	}
 }
