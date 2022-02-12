@@ -5,25 +5,26 @@ import { ReplaySubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { User } from '../_models/user';
+import { PresenceService } from './presence.service';
 
 // services are Injectable
 // services are singleton
 @Injectable({
-	providedIn: 'root'
+	providedIn: 'root',
 })
 export class AccountService {
 	baseUrl = environment.apiUrl;
 	private currentUserSource = new ReplaySubject<User>(1);
 	currentUser$ = this.currentUserSource.asObservable();
 
-	constructor(private http: HttpClient) { }
+	constructor(private http: HttpClient, private presence: PresenceService) {}
 
 	setCurrentUser(user: User) {
 		user.roles = [];
 		const roles = this.getDecodedToken(user.token).role;
-		Array.isArray(roles) ? user.roles = roles : user.roles.push(roles);
-		
-		localStorage.setItem("user", JSON.stringify(user));
+		Array.isArray(roles) ? (user.roles = roles) : user.roles.push(roles);
+
+		localStorage.setItem('user', JSON.stringify(user));
 		this.currentUserSource.next(user);
 	}
 
@@ -32,6 +33,7 @@ export class AccountService {
 			map((user: User) => {
 				if (user) {
 					this.setCurrentUser(user);
+					this.presence.createHubConnection(user);
 				}
 			})
 		);
@@ -44,16 +46,18 @@ export class AccountService {
 				if (user) {
 					// pass the value to current user
 					this.setCurrentUser(user);
+					this.presence.createHubConnection(user);
 				}
 			})
 		);
 	}
 
 	logout() {
-		localStorage.removeItem("user");
+		localStorage.removeItem('user');
 		this.currentUserSource.next(null);
+		this.presence.stopHubConnection();
 	}
-	
+
 	getDecodedToken(token) {
 		// get payload token
 		return JSON.parse(atob(token.split('.')[1]));
