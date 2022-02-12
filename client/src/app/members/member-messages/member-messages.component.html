@@ -5,12 +5,12 @@
 		style="overflow: scroll; height: 535px"
 		[scrollTop]="scrollMe.scrollHeight"
 	>
-		<div *ngIf="messages?.length === 0">
+		<div *ngIf="(messageService.messageThread$ | async)?.length === 0">
 			No messages just yet.. say "hi" by using the message box below
 		</div>
 
-		<ul *ngIf="messages?.length > 0" class="chat">
-			<li *ngFor="let message of messages">
+		<ul *ngIf="(messageService.messageThread$ | async)?.length > 0" class="chat">
+			<li *ngFor="let message of (messageService.messageThread$ | async)">
 				<!-- refactored to get messages here -->
 				<div>
 					<span class="chat-img float-right">
