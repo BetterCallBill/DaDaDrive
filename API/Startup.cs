@@ -30,7 +30,9 @@ namespace API
             });
             services.AddCors();
             services.AddIdentityServices(_config);
-            services.AddSignalR();
+            services.AddSignalR(x => {
+                x.EnableDetailedErrors = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
