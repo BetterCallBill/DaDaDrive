@@ -21,9 +21,13 @@ export class MemberMessagesComponent implements OnInit {
 	ngOnInit(): void {}
 
 	sendMessage() {
+		this.loading = true;
 		// return Promise
-		this.messageService.sendMessage(this.username, this.messageContent).then(() => {
-			this.messageForm.reset();
-		});
+		this.messageService
+			.sendMessage(this.username, this.messageContent)
+			.then(() => {
+				this.messageForm.reset();
+			})
+			.finally(() => (this.loading = false));
 	}
 }
