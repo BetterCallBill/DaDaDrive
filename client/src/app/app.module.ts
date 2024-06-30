@@ -38,7 +38,6 @@ import { ConfirmDialogComponent } from './modals/confirm-dialog/confirm-dialog.c
     AppComponent,
     NavComponent,
     HomeComponent,
-    RegisterComponent,
     MemberListComponent,
     MemberDetailComponent,
     ListsComponent,
@@ -49,8 +48,6 @@ import { ConfirmDialogComponent } from './modals/confirm-dialog/confirm-dialog.c
     MemberCardComponent,
     MemberEditComponent,
     PhotoEditorComponent,
-    TextInputComponent,
-    DateInputComponent,
     MemberMessagesComponent,
     AdminPanelComponent,
     HasRoleDirective,
@@ -67,12 +64,15 @@ import { ConfirmDialogComponent } from './modals/confirm-dialog/confirm-dialog.c
     BrowserAnimationsModule,
     SharedModule,
     NgxSpinnerModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    TextInputComponent,
+    DatePickerComponent,
+    RegisterComponent
   ],
   providers: [
-    {provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true},
-    {provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true},
-    {provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor, multi: true}
+    { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor, multi: true }
   ],
   bootstrap: [AppComponent]
 })
