@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { ActivatedRouteSnapshot, Resolve } from "@angular/router";
+import { ActivatedRouteSnapshot } from "@angular/router";
 import { Observable } from "rxjs";
 import { Member } from "../_models/member";
 import { MembersService } from "../_services/members.service";
@@ -8,7 +8,7 @@ import { MembersService } from "../_services/members.service";
 @Injectable({
     providedIn: 'root'
 })
-export class MemberDetailsResolver implements Resolve<Member> {
+export class MemberDetailsResolver  {
     
     constructor(private memberSerive: MembersService) { }
     
