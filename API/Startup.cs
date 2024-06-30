@@ -1,11 +1,7 @@
 using API.Extensions;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
 using API.Middleware;
 using API.SignalR;
+using Microsoft.OpenApi.Models;
 
 namespace API
 {

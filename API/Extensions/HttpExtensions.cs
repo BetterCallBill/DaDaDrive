@@ -1,6 +1,5 @@
 using System.Text.Json;
 using API.Helpers;
-using Microsoft.AspNetCore.Http;
 
 namespace API.Extensions
 {
@@ -15,8 +14,8 @@ namespace API.Extensions
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
 
-            httpResponse.Headers.Add("Pagination", JsonSerializer.Serialize(paginationHeader, options));
-            httpResponse.Headers.Add("Access-Control-Expose-Headers", "Pagination");
+            httpResponse.Headers.Append("Pagination", JsonSerializer.Serialize(paginationHeader, options));
+            httpResponse.Headers.Append("Access-Control-Expose-Headers", "Pagination");
         }
     }
 }
