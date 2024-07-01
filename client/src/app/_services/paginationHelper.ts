@@ -1,29 +1,22 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { map } from 'rxjs/operators';
-import { PaginatedResult } from '../_models/pagination';
+import { HttpParams, HttpResponse } from "@angular/common/http";
+import { signal } from "@angular/core";
+import { PaginatedResult } from "../_models/pagination";
 
-export function getPaginationHeaders(pageNumber: number, pageSize: number) {
-	let params = new HttpParams();
-
-	params = params.append('pageNumber', pageNumber.toString());
-	params = params.append('pageSize', pageSize.toString());
-
-	return params;
+export function setPaginatedResponse<T>(response: HttpResponse<T>,
+	paginatedResultSignal: ReturnType<typeof signal<PaginatedResult<T> | null>>) {
+	paginatedResultSignal.set({
+		items: response.body as T,
+		pagination: JSON.parse(response.headers.get('Pagination')!)
+	})
 }
 
-export function getPaginationResult<T>(url, params, http: HttpClient) {
-	const paginatedResult: PaginatedResult<T> = new PaginatedResult<T>();
+export function setPaginationHeaders(pageNumber: number, pageSize: number) {
+	let params = new HttpParams();
 
-	return http.get<T>(url, { observe: 'response', params }).pipe(
-		map((response) => {
-			paginatedResult.result = response.body;
-			if (response.headers.get('Pagination') !== null) {
-				paginatedResult.pagination = JSON.parse(
-					response.headers.get('Pagination')
-				);
-			}
+	if (pageNumber && pageSize) {
+		params = params.append('pageNumber', pageNumber);
+		params = params.append('pageSize', pageSize);
+	}
 
-			return paginatedResult;
-		})
-	);
+	return params;
 }

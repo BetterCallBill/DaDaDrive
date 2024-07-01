@@ -1,17 +1,13 @@
-import { Injectable } from '@angular/core';
-import { ActivatedRouteSnapshot, CanDeactivate, RouterStateSnapshot, UrlTree } from '@angular/router';
-import { Observable } from 'rxjs';
+import { CanDeactivateFn } from '@angular/router';
 import { MemberEditComponent } from '../members/member-edit/member-edit.component';
+import { inject } from '@angular/core';
+import { ConfirmService } from '../_services/confirm.service';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class PreventUnsavedChangesGuard implements CanDeactivate<unknown> {
-  canDeactivate(component: MemberEditComponent): boolean {
-    if (component.editForm.dirty) {
-      return confirm('Are you sure?')
-    }
-    return true;
+export const preventUnsavedChangesGuard: CanDeactivateFn<MemberEditComponent> = (component) => {
+  const confirmService = inject(ConfirmService);
+
+  if (component.editForm?.dirty) {
+    return confirmService.confirm() ?? false;
   }
-  
-}
+  return true;
+};

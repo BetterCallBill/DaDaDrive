@@ -1,19 +1,14 @@
-import { Injectable } from "@angular/core";
-import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from "@angular/router";
-import { Observable } from "rxjs";
-import { Member } from "../_models/member";
-import { MembersService } from "../_services/members.service";
+import { ResolveFn } from '@angular/router';
+import { Member } from '../_models/member';
+import { inject } from '@angular/core';
+import { MembersService } from '../_services/members.service';
 
+export const memberDetailedResolver: ResolveFn<Member | null> = (route, state) => {
+    const memberService = inject(MembersService);
 
-@Injectable({
-    providedIn: 'root'
-})
-export class MemberDetailsResolver implements Resolve<Member> {
-    
-    constructor(private memberSerive: MembersService) { }
-    
-    resolve(route: ActivatedRouteSnapshot): Observable<Member> {
-        return this.memberSerive.getMember(route.paramMap.get('username'));
-    }
-    
-}
+    const username = route.paramMap.get('username');
+
+    if (!username) return null;
+
+    return memberService.getMember(username);
+};
