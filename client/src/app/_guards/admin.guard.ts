@@ -1,26 +1,16 @@
-import { Injectable } from '@angular/core';
-import { ToastrService } from 'ngx-toastr';
-import { map, Observable } from 'rxjs';
+import { inject } from '@angular/core';
+import { CanActivateFn } from '@angular/router';
 import { AccountService } from '../_services/account.service';
+import { ToastrService } from 'ngx-toastr';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class AdminGuard  {
-  constructor(private accountService: AccountService, private toastr: ToastrService) {}
+export const adminGuard: CanActivateFn = (route, state) => {
+  const accountService = inject(AccountService);
+  const toastr = inject(ToastrService);
 
-  canActivate(): Observable<boolean> {
-    return this.accountService.currentUser$.pipe(
-      map(user => {
-        if (!user) return false;
-        if (user.roles.includes('Admin') || user.roles.includes('Moderator')) {
-          return true;
-        } else {
-          this.toastr.error('You cannot enter this area');
-          return false;
-        }
-      })
-    )
+  if (accountService.roles().includes('Admin') || accountService.roles().includes('Moderator')) {
+    return true;
+  } else {
+    toastr.error('You cannot enter this area');
+    return false;
   }
-  
-}
+};
