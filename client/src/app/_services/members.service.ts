@@ -1,129 +1,96 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { of } from 'rxjs';
-import { map, take } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
+import { HttpClient } from '@angular/common/http';
+import { Directive, Injectable, inject, model, signal } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { Member } from '../_models/member';
+import { of } from 'rxjs';
+import { Photo } from '../_models/photo';
 import { PaginatedResult } from '../_models/pagination';
-import { User } from '../_models/user';
 import { UserParams } from '../_models/userParams';
 import { AccountService } from './account.service';
-import { getPaginationHeaders, getPaginatedResult } from './paginationHelper';
+import { setPaginatedResponse, setPaginationHeaders } from './paginationHelper';
 
 @Injectable({
-	providedIn: 'root',
+	providedIn: 'root'
 })
+
+@Directive({
+})
+
 export class MembersService {
+	private http = inject(HttpClient);
+	private accountService = inject(AccountService);
 	baseUrl = environment.apiUrl;
-	members: Member[] = [];
+	paginatedResult = signal<PaginatedResult<Member[]> | null>(null);
 	memberCache = new Map();
-	user: User;
-	userParams: UserParams;
-
-	constructor(
-		private http: HttpClient,
-		private accountService: AccountService
-	) {
-		this.accountService.currentUser$.pipe(take(1)).subscribe((user) => {
-			this.user = user;
-			this.userParams = new UserParams(user);
-		});
-	}
-
-	getUserParams() {
-		return this.userParams;
-	}
-
-	setUserParams(userParams: UserParams) {
-		this.userParams = userParams;
-	}
+	user = this.accountService.currentUser();
+	userParams = model<UserParams>(new UserParams(this.user));
 
 	resetUserParams() {
-		this.userParams = new UserParams(this.user);
-		return this.userParams;
+		this.userParams.set(new UserParams(this.user));
 	}
 
-	getMembers(userParams: UserParams) {
-		// Try to find query key words from cache
-		var response = this.memberCache.get(
-			Object.values(userParams).join('-')
-		);
-		if (response) {
-			return of(response);
-		}
+	getMembers() {
+		const response = this.memberCache.get(Object.values(this.userParams()).join('-'));
 
-		let params = getPaginationHeaders(
-			userParams.PageNumber,
-			userParams.pageSize
-		);
+		if (response) return setPaginatedResponse(response, this.paginatedResult);
 
-		params = params.append('minAge', userParams.minAge.toString());
-		params = params.append('maxAge', userParams.maxAge.toString());
-		params = params.append('gender', userParams.gender);
-		params = params.append('orderBy', userParams.orderBy);
+		let params = setPaginationHeaders(this.userParams().pageNumber, this.userParams().pageSize);
 
-		return getPaginatedResult<Member[]>(
-			this.baseUrl + 'users',
-			params,
-			this.http
-		).pipe(
-			map((response) => {
-				// Set the cache
-				this.memberCache.set(
-					Object.values(userParams).join('-'),
-					response
-				);
-				return response;
-			})
-		);
+		params = params.append('minAge', this.userParams().minAge);
+		params = params.append('maxAge', this.userParams().maxAge);
+		params = params.append('gender', this.userParams().gender);
+		params = params.append('orderBy', this.userParams().orderBy);
+
+		return this.http.get<Member[]>(this.baseUrl + 'users', { observe: 'response', params }).subscribe({
+			next: response => {
+				setPaginatedResponse(response, this.paginatedResult);
+				this.memberCache.set(Object.values(this.userParams()).join('-'), response);
+			}
+		})
 	}
 
 	getMember(username: string) {
-		// Get values from cache
-		const member = [...this.memberCache.values()]
-			.reduce((arr, elem) => arr.concat(elem.result), [])
-			.find((member: Member) => member.username === username);
+		const member: Member = [...this.memberCache.values()]
+			.reduce((arr, elem) => arr.concat(elem.body), [])
+			.find((m: Member) => m.username === username);
 
-		if (member) {
-			return of(member);
-		}
+		if (member) return of(member);
 
 		return this.http.get<Member>(this.baseUrl + 'users/' + username);
 	}
 
 	updateMember(member: Member) {
 		return this.http.put(this.baseUrl + 'users', member).pipe(
-			map(() => {
-				const index = this.members.indexOf(member);
-				this.members[index] = member;
-			})
-		);
+			// tap(() => {
+			//   this.members.update(members => members.map(m => m.username === member.username 
+			//       ? member : m))
+			// })
+		)
 	}
 
-	// Send http request
-	setMainPhoto(photoId: number) {
-		return this.http.put(
-			this.baseUrl + 'users/set-main-photo/' + photoId,
-			{}
-		);
+	setMainPhoto(photo: Photo) {
+		return this.http.put(this.baseUrl + 'users/set-main-photo/' + photo.id, {}).pipe(
+			// tap(() => {
+			//   this.members.update(members => members.map(m => {
+			//     if (m.photos.includes(photo)) {
+			//       m.photoUrl = photo.url
+			//     }
+			//     return m;
+			//   }))
+			// })
+		)
 	}
 
-	deletePhoto(photoId: number) {
-		return this.http.delete(this.baseUrl + 'users/delete-photo/' + photoId);
-	}
-
-	// Add like
-	addLike(username: string) {
-		return this.http.post(this.baseUrl + 'likes/' + username, {});
-	}
-
-	getLikes(predicate: string, pageNumber, pageSize) {
-		let params = getPaginationHeaders(pageNumber, pageSize);
-		params = params.append('predicate', predicate);
-		return getPaginatedResult<Partial<Member[]>>(
-			this.baseUrl + 'likes',
-			params,
-			this.http
-		);
+	deletePhoto(photo: Photo) {
+		return this.http.delete(this.baseUrl + 'users/delete-photo/' + photo.id).pipe(
+			// tap(() => {
+			//   this.members.update(members => members.map(m => {
+			//     if (m.photos.includes(photo)) {
+			//       m.photos = m.photos.filter(x => x.id !== photo.id)
+			//     }
+			//     return m
+			//   }))
+			// })
+		)
 	}
 }

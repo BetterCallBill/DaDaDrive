@@ -27,17 +27,16 @@ namespace API.Controllers
             var thing = _context.Users.Find(-1);
 
             if (thing == null) return NotFound();
-            
+
             return Ok(thing);
         }
 
         [HttpGet("server-error")]
-        public ActionResult<string> GetServerError()
+        public ActionResult<AppUser> GetServerError()
         {
-            var thing = _context.Users.Find(-1);
-            var thingToReturn = thing.ToString();
+            var thing = _context.Users.Find(-1) ?? throw new Exception("A bad thing has happened");
 
-            return thingToReturn;
+            return thing;
         }
 
         [HttpGet("bad-request")]

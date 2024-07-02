@@ -2,13 +2,13 @@ using API.DTOs;
 using API.Entities;
 using API.Helpers;
 
-namespace API.Interfaces
-{
-    public interface ILikeRepository
-    {
-        Task<UserLike> GetUserLikeRelationship(int sourceUserId, int likedUserId);
-        Task<AppUser> GetUserWithLikes(int userId);
-        Task<PagedList<LikeDto>> GetUserLikes(LikesPaginationParams likesPaginationParams);
+namespace API;
 
-    }
+public interface ILikesRepository
+{
+    Task<UserLike?> GetUserLike(int sourceUserId, int targetUserId);
+    Task<PagedList<MemberDto>> GetUserLikes(LikesParams likesParams);
+    Task<IEnumerable<int>> GetCurrentUserLikeIds(int currentUserId);
+    void DeleteLike(UserLike like);
+    void AddLike(UserLike like);
 }

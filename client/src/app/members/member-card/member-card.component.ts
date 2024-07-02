@@ -1,28 +1,32 @@
-import { Component, Input, OnInit } from '@angular/core';
-import { ToastrService } from 'ngx-toastr';
-import { Member } from 'src/app/_models/member';
-import { MembersService } from 'src/app/_services/members.service';
-import { PresenceService } from 'src/app/_services/presence.service';
+import { Component, computed, inject, input } from '@angular/core';
+import { Member } from '../../_models/member';
+import { RouterLink } from '@angular/router';
+import { LikesService } from '../../_services/likes.service';
+import { PresenceService } from '../../_services/presence.service';
 
 @Component({
 	selector: 'app-member-card',
+	standalone: true,
+	imports: [RouterLink],
 	templateUrl: './member-card.component.html',
-	styleUrls: ['./member-card.component.css'],
+	styleUrl: './member-card.component.css'
 })
-export class MemberCardComponent implements OnInit {
-	@Input() member: Member;
+export class MemberCardComponent {
+	private likeService = inject(LikesService);
+	private presenceService = inject(PresenceService);
+	member = input.required<Member>();
+	hasLiked = computed(() => this.likeService.likeIds().includes(this.member().id));
+	isOnline = computed(() => this.presenceService.onlineUsers().includes(this.member().username));
 
-	constructor(
-		private memberService: MembersService,
-		private toastr: ToastrService,
-		public presence: PresenceService
-	) {}
-
-	ngOnInit(): void {}
-
-	addLike(member: Member) {
-		this.memberService.addLike(member.username).subscribe(() => {
-			this.toastr.success('You have liked ' + member.knownAs);
-		});
+	toggleLike() {
+		this.likeService.toggleLike(this.member().id).subscribe({
+			next: () => {
+				if (this.hasLiked()) {
+					this.likeService.likeIds.update(ids => ids.filter(x => x !== this.member().id))
+				} else {
+					this.likeService.likeIds.update(ids => [...ids, this.member().id])
+				}
+			}
+		})
 	}
 }

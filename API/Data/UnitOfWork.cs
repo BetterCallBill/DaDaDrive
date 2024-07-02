@@ -1,33 +1,28 @@
 using API.Interfaces;
-using AutoMapper;
 
-namespace API.Data
+namespace API.Data;
+
+public class UnitOfWork(
+    DataContext context, 
+    IUserRepository userRepository,
+    ILikesRepository likesRepository, 
+    IMessageRepository messageRepository,
+    IPhotoRepository photoRepository) : IUnitOfWork
 {
-    public class UnitOfWork : IUnitOfWork
+    public IUserRepository UserRepository => userRepository;
+
+    public IMessageRepository MessageRepository => messageRepository;
+
+    public ILikesRepository LikesRepository => likesRepository;
+    public IPhotoRepository PhotoRepository => photoRepository;
+
+    public async Task<bool> Complete()
     {
-        private readonly DataContext _dataContext;
-        private readonly IMapper _mapper;
+        return await context.SaveChangesAsync() > 0;
+    }
 
-        public UnitOfWork(DataContext dataContext, IMapper mapper)
-        {
-            _dataContext = dataContext;
-            _mapper = mapper;
-        }
-
-        public IUserRepository UserRepository => new UserRepository(_dataContext, _mapper);
-
-        public IMessageRepository MessageRepository => new MessageRepository(_dataContext, _mapper);
-
-        public ILikeRepository LikeRepository => new LikeRepository(_dataContext);
-
-        public async Task<bool> Complete()
-        {
-            return await _dataContext.SaveChangesAsync() > 0;
-        }
-
-        public bool HasChanges()
-        {
-            return _dataContext.ChangeTracker.HasChanges();
-        }
+    public bool HasChanges()
+    {
+        return context.ChangeTracker.HasChanges();
     }
 }

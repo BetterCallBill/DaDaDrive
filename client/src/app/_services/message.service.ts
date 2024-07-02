@@ -1,92 +1,87 @@
+import { Injectable, inject, signal } from '@angular/core';
+import { environment } from '../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
-import { BehaviorSubject } from 'rxjs';
-import { take } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
-import { Group } from '../_models/group';
+import { PaginatedResult } from '../_models/pagination';
 import { Message } from '../_models/message';
+import { setPaginatedResponse, setPaginationHeaders } from './paginationHelper';
+import { HubConnection, HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
 import { User } from '../_models/user';
+import { Group } from '../_models/group';
 import { BusyService } from './busy.service';
-import { getPaginationHeaders, getPaginationResult } from './paginationHelper';
 
 @Injectable({
-	providedIn: 'root',
+	providedIn: 'root'
 })
 export class MessageService {
 	baseUrl = environment.apiUrl;
-	hubUrl = environment.hubUrl;
-	private hubConnection: HubConnection;
-	private messageThreadSource = new BehaviorSubject<Message[]>([]);
-	messageThread$ = this.messageThreadSource.asObservable();
-
-	constructor(private httpClient: HttpClient, private busyService: BusyService) {}
+	hubUrl = environment.hubsUrl;
+	private http = inject(HttpClient);
+	private busyService = inject(BusyService);
+	hubConnection?: HubConnection;
+	paginatedResult = signal<PaginatedResult<Message[]> | null>(null);
+	messageThread = signal<Message[]>([]);
 
 	createHubConnection(user: User, otherUsername: string) {
 		this.busyService.busy();
-
 		this.hubConnection = new HubConnectionBuilder()
 			.withUrl(this.hubUrl + 'message?user=' + otherUsername, {
-				accessTokenFactory: () => user.token,
+				accessTokenFactory: () => user.token
 			})
 			.withAutomaticReconnect()
 			.build();
 
-		this.hubConnection
-			.start()
-			.catch((error) => console.log(error))
+		this.hubConnection.start()
+			.catch(error => console.log(error))
 			.finally(() => this.busyService.idle());
 
-		this.hubConnection.on('ReceiveMessageThread', (messages) => {
-			this.messageThreadSource.next(messages);
+		this.hubConnection.on('ReceiveMessageThread', messages => {
+			this.messageThread.set(messages)
 		});
 
-		this.hubConnection.on('NewMessage', (message) => {
-			this.messageThread$.pipe(take(1)).subscribe((messages) => {
-				this.messageThreadSource.next([...messages, message]);
-			});
+		this.hubConnection.on('NewMessage', message => {
+			this.messageThread.update(messages => [...messages, message])
 		});
 
 		this.hubConnection.on('UpdatedGroup', (group: Group) => {
-			if (group.connections.some((x) => x.username == otherUsername)) {
-				this.messageThread$.pipe(take(1)).subscribe((messages) => {
-					messages.forEach((message) => {
+			if (group.connections.some(x => x.username === otherUsername)) {
+				this.messageThread.update(messages => {
+					messages.forEach(message => {
 						if (!message.dateRead) {
 							message.dateRead = new Date(Date.now());
 						}
-					});
-
-					this.messageThreadSource.next([...messages]);
-				});
+					})
+					return messages;
+				})
 			}
-		});
+		})
 	}
 
 	stopHubConnection() {
-		if (this.hubConnection) {
-			this.messageThreadSource.next([]);
-			this.hubConnection.stop();
+		if (this.hubConnection?.state === HubConnectionState.Connected) {
+			this.hubConnection.stop().catch(error => console.log(error))
 		}
 	}
 
-	getMessages(pageNumber, pageSize, container) {
-		let params = getPaginationHeaders(pageNumber, pageSize);
-		params = params.append('container', container);
+	getMessages(pageNumber: number, pageSize: number, container: string) {
+		let params = setPaginationHeaders(pageNumber, pageSize);
 
-		return getPaginationResult<Message[]>(this.baseUrl + 'messages', params, this.httpClient);
+		params = params.append('Container', container);
+
+		return this.http.get<Message[]>(this.baseUrl + 'messages', { observe: 'response', params })
+			.subscribe({
+				next: response => setPaginatedResponse(response, this.paginatedResult)
+			})
 	}
 
 	getMessageThread(username: string) {
-		return this.httpClient.get<Message[]>(this.baseUrl + 'messages/thread/' + username);
+		return this.http.get<Message[]>(this.baseUrl + 'messages/thread/' + username);
 	}
 
 	async sendMessage(username: string, content: string) {
-		return this.hubConnection
-			.invoke('SendMessage', { recipientUsername: username, content })
-			.catch((error) => console.log(error));
+		return this.hubConnection?.invoke('SendMessage', { recipientUsername: username, content })
 	}
 
 	deleteMessage(id: number) {
-		return this.httpClient.delete(this.baseUrl + 'messages/' + id);
+		return this.http.delete(this.baseUrl + 'messages/' + id);
 	}
 }

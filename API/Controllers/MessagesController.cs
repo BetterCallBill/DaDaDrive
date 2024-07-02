@@ -36,7 +36,8 @@ namespace API.Controllers
             var sender = await _unitOfWork.UserRepository.GetUserByUsernameAsync(username);
             var recipient = await _unitOfWork.UserRepository.GetUserByUsernameAsync(createMessageDto.RecipientUsername);
 
-            if (recipient == null) return NotFound();
+            if (recipient == null || sender == null || sender.UserName == null || recipient.UserName == null)
+                return BadRequest("Cannot send message at this time");
 
             var message = new Message
             {
@@ -62,7 +63,7 @@ namespace API.Controllers
             var messages = await _unitOfWork.MessageRepository.GetMessagesForUser(messageParams);
 
             // Write pagination to header
-            Response.AddPaginationHeader(messages.CurrentPage, messages.PageSize, messages.TotalCount, messages.TotalPages);
+            Response.AddPaginationHeader(messages);
 
             return messages;
         }
@@ -72,10 +73,11 @@ namespace API.Controllers
         {
             var username = User.GetUsername();
             var message = await _unitOfWork.MessageRepository.GetMessage(id);
+            if (message == null) return BadRequest("Cannot delete this message");
 
             if (message.Sender.UserName != username && message.Recipient.UserName != username)
             {
-                return Unauthorized();
+                return Forbid();
             }
 
             if (message.Sender.UserName == username)
@@ -86,7 +88,7 @@ namespace API.Controllers
 
             if (message.SenderDeleted && message.RecipientDeleted)
                 _unitOfWork.MessageRepository.DeleteMessage(message);
-            
+
             if (await _unitOfWork.Complete())
                 return Ok();
 

@@ -1,8 +1,7 @@
-namespace API.Helpers
+namespace API.Helpers;
+
+public class LikesParams : PaginationParams
 {
-    public class LikesPaginationParams : PaginationParams
-    {
-        public int UserId { get; set; }
-        public string Predicate { get; set; }
-    }
+    public int UserId { get; set; }
+    public required string Predicate { get; set; } = "liked";
 }

@@ -28,33 +28,33 @@ namespace API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery]UserParams userParams)
+        public async Task<ActionResult<IEnumerable<MemberDto>>> GetUsers([FromQuery] UserParams userParams)
         {
-            // Get current user
-            var gender = await _unitOfWork.UserRepository.GetUserGender(User.GetUsername());
             userParams.CurrentUsername = User.GetUsername();
-
-            // If userParams.Gender is empty, return user's gender
-            if (string.IsNullOrEmpty(userParams.Gender))
-                userParams.Gender = gender;
-
             var users = await _unitOfWork.UserRepository.GetMembersAsync(userParams);
 
-            Response.AddPaginationHeader(users.CurrentPage, users.PageSize, users.TotalCount, users.TotalPages);
+            Response.AddPaginationHeader(users);
 
             return Ok(users);
         }
 
-        [HttpGet("{username}", Name = "GetUser")]
-        public async Task<ActionResult<MemberDto>> GetUserByUsername(string username)
+        [HttpGet("{username}")]
+        public async Task<ActionResult<MemberDto>> GetUser(string username)
         {
-            return await _unitOfWork.UserRepository.GetMemberAsync(username);
+            var currentUsername = User.GetUsername();
+            var user = await _unitOfWork.UserRepository.GetMemberAsync(username,
+                isCurrentUser: currentUsername == username);
+
+            if (user == null) return NotFound();
+
+            return user;
         }
 
         [HttpPut]
         public async Task<ActionResult> UpdateUser(MemberUpdateDto memberUpdateDto)
         {
             var user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername());
+            if (user == null) return BadRequest("Could not find user");
 
             _mapper.Map(memberUpdateDto, user);
 
@@ -70,6 +70,7 @@ namespace API.Controllers
         {
             // Get user
             var user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername());
+            if (user == null) return BadRequest("Could not find user");
 
             var result = await _photoService.AddPhotoAsync(file);
 
@@ -81,7 +82,7 @@ namespace API.Controllers
             var photo = new Photo
             {
                 Url = result.SecureUrl.AbsoluteUri,
-                PublishId = result.PublicId
+                PublicId = result.PublicId
             };
 
             if (user.Photos.Count == 0)
@@ -104,8 +105,10 @@ namespace API.Controllers
         public async Task<ActionResult> SetMainPhoto(int photoId)
         {
             var user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername());
+            if (user == null) return BadRequest("Could not find user");
 
             var photo = user.Photos.FirstOrDefault(photo => photo.Id == photoId);
+            if (photo == null) return NotFound();
 
             if (photo.IsMain)
                 return BadRequest("This is already a main photo");
@@ -119,19 +122,21 @@ namespace API.Controllers
             return BadRequest("Failed to set main photo");
         }
 
-        [HttpDelete("delete-photo/{photoId}")]
+        [HttpDelete("delete-photo/{photoId:int}")]
         public async Task<ActionResult> DeletePhoto(int photoId)
         {
             var user = await _unitOfWork.UserRepository.GetUserByUsernameAsync(User.GetUsername());
-            var photo = user.Photos.FirstOrDefault(photo => photo.Id == photoId);
+            if (user == null) return BadRequest("User not found");
+
+            var photo = await _unitOfWork.PhotoRepository.GetPhotoById(photoId);
 
             if (photo == null) return NotFound();
             if (photo.IsMain) return BadRequest("You cannot delete your main photo");
 
-            if (photo.PublishId != null)
+            if (photo.PublicId != null)
             {
                 // Delete photo
-                var result = await _photoService.DeletePhotoAsync(photo.PublishId);
+                var result = await _photoService.DeletePhotoAsync(photo.PublicId);
                 if (result.Error != null) return BadRequest(result.Error.Message);
             }
 

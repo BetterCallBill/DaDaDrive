@@ -2,11 +2,14 @@
 	<div class="col-4">
 		<div class="card">
 			<img src="{{member.photoUrl || './assets/user.png'}}" alt="{{member.knownAs}}"
-				class="card-img-top img-thumbnail">
+				class="card-img img-thumbnail">
 			<div class="card-body">
-				<div class="mb-2" *ngIf="(presenceService.onlineUsers$ | async)?.includes(member.userName)">
+				@if (presenceService.onlineUsers().includes(member.username)) {
+				<div class="mb-2">
 					<i class="fa fa-user-circle text-success"></i> Online now
 				</div>
+				}
+
 				<div>
 					<strong>Location:</strong>
 					<p>{{member.city}}, {{member.country}}</p>
@@ -16,12 +19,12 @@
 					<p>{{member.age}}</p>
 				</div>
 				<div>
-					<strong>Last active:</strong>
+					<strong>Last Active:</strong>
 					<p>{{member.lastActive | timeago}}</p>
 				</div>
 				<div>
 					<strong>Member since:</strong>
-					<p>{{member.created | date:'dd MMM yyyy'}}</p>
+					<p>{{member.created | date: 'dd MMM yyyy'}}</p>
 				</div>
 			</div>
 			<div class="card-footer">
@@ -32,6 +35,7 @@
 			</div>
 		</div>
 	</div>
+
 	<div class="col-8">
 		<tabset class="member-tabset" #memberTabs>
 			<tab heading="About {{member.knownAs}}" (selectTab)="onTabActivated($event)">
@@ -45,11 +49,15 @@
 				<p>{{member.interests}}</p>
 			</tab>
 			<tab heading="Photos" #photoTab="tab" (selectTab)="onTabActivated($event)">
-				<gallery *ngIf="photoTab.active" [items]="images" class="gallery"></gallery>
+				@if (photoTab.active) {
+				<gallery [items]="images" [itemAutosize]="true" class="gallery"></gallery>
+				}
+
 			</tab>
 			<tab heading="Messages" (selectTab)="onTabActivated($event)">
-				<app-member-messages [username]="member.userName"></app-member-messages>
+				<app-member-messages [username]="member.username"></app-member-messages>
 			</tab>
 		</tabset>
 	</div>
+
 </div>

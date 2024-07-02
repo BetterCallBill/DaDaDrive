@@ -1,25 +1,31 @@
-import { Component, EventEmitter, Input, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap/modal';
-import { User } from 'src/app/_models/user';
 
 @Component({
   selector: 'app-roles-modal',
+  standalone: true,
+  imports: [],
   templateUrl: './roles-modal.component.html',
-  styleUrls: ['./roles-modal.component.css']
+  styleUrl: './roles-modal.component.css'
 })
-export class RolesModalComponent implements OnInit {
-  @Input() updateSelectedRoles = new EventEmitter();
-  user: User;
-  roles: any[];
-  
-  constructor(public bsModalRef: BsModalRef) { }
+export class RolesModalComponent {
+  bsModalRef = inject(BsModalRef);
+  username = '';
+  title = '';
+  availableRoles: string[] = [];
+  selectedRoles: string[] = [];
+  rolesUpdated = false;
 
-  ngOnInit(): void {
+  updateChecked(checkedValue: string) {
+    if (this.selectedRoles.includes(checkedValue)) {
+      this.selectedRoles = this.selectedRoles.filter(r => r !== checkedValue)
+    } else {
+      this.selectedRoles.push(checkedValue);
+    }
   }
-  
-  updateRoles() {
-    this.updateSelectedRoles.emit(this.roles);
+
+  onSelectRoles() {
+    this.rolesUpdated = true;
     this.bsModalRef.hide();
   }
-
 }
