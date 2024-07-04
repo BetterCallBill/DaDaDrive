@@ -13,9 +13,6 @@ import { setPaginatedResponse, setPaginationHeaders } from './paginationHelper';
 	providedIn: 'root'
 })
 
-@Directive({
-})
-
 export class MembersService {
 	private http = inject(HttpClient);
 	private accountService = inject(AccountService);
@@ -23,7 +20,7 @@ export class MembersService {
 	paginatedResult = signal<PaginatedResult<Member[]> | null>(null);
 	memberCache = new Map();
 	user = this.accountService.currentUser();
-	userParams = model<UserParams>(new UserParams(this.user));
+	userParams = signal<UserParams>(new UserParams(this.user));
 
 	resetUserParams() {
 		this.userParams.set(new UserParams(this.user));

@@ -20,6 +20,7 @@ export class NavComponent {
   model: any = {};
 
   login() {
+    console.log("---> this.model: ", this.model)
     this.accountService.login(this.model).subscribe({
       next: _ => {
         // Promise
