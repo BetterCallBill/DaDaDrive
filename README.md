@@ -7,13 +7,15 @@ Recently updated from .Net 6 + Angular 13 to .Net 8.0 + Angular 18.
 
 ## Features
 
--   Real time notifications and presence using SignalR
 -   User-friendly interface
--   Implement drag and drop photo upload integrating into a cloud platform
--   Implement filtering, sorting and paging of data
--   Implement Authentication using JWT Authentication tokens
 -   Use interceptor to modify or handle HTTP requests and responses
 -   Use guards to control navigation and access
+-   Implement Authentication using JWT Authentication tokens
+-   Implement drag and drop photo upload integrating into a cloud platform
+-   Implement filtering, sorting and paging of data
+-   Real time notifications and presence using SignalR
+
+-   Deploy to Azure using App Service & SQL server
 
 ## Installation
 
