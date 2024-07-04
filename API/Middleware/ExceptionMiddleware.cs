@@ -10,7 +10,11 @@ namespace API.Middleware
         private readonly ILogger<ExceptionMiddleware> _logger;
         private readonly IHostEnvironment _env;
 
-        public ExceptionMiddleware(RequestDelegate requestDelegate, ILogger<ExceptionMiddleware> logger, IHostEnvironment env)
+        public ExceptionMiddleware(
+            RequestDelegate requestDelegate,
+            ILogger<ExceptionMiddleware> logger,
+            IHostEnvironment env
+        )
         {
             _env = env;
             _logger = logger;
@@ -30,10 +34,10 @@ namespace API.Middleware
                 httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
                 // create response
-                // 1. check env 
+                // check env 
                 var response = _env.IsDevelopment()
                     ? new ApiException(httpContext.Response.StatusCode, ex.Message, ex.StackTrace?.ToString())
-                    : new ApiException(httpContext.Response.StatusCode, "Internal Server Error");
+                    : new ApiException(httpContext.Response.StatusCode, ex.Message, "Internal Server Error");
 
                 // set json format in camel case
                 var options = new JsonSerializerOptions

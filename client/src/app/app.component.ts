@@ -1,22 +1,19 @@
-import { Component, OnInit } from '@angular/core';
-import { AccountService } from './_services/account.service';
-import { User } from './_models/user';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { NavComponent } from './nav/nav.component';
+import { NavComponent } from "./nav/nav.component";
+import { AccountService } from './_services/account.service';
+import { HomeComponent } from "./home/home.component";
 import { NgxSpinnerComponent } from 'ngx-spinner';
 
 @Component({
 	selector: 'app-root',
-	templateUrl: './app.component.html',
-	styleUrls: ['./app.component.css'],
 	standalone: true,
-	imports: [NgxSpinnerComponent, NavComponent, RouterOutlet]
+	templateUrl: './app.component.html',
+	styleUrl: './app.component.css',
+	imports: [RouterOutlet, NavComponent, HomeComponent, NgxSpinnerComponent]
 })
 export class AppComponent implements OnInit {
-	title = 'Dating app';
-	users: any;
-
-	constructor(private accountService: AccountService) { }
+	private accountService = inject(AccountService);
 
 	ngOnInit(): void {
 		this.setCurrentUser();
@@ -25,7 +22,7 @@ export class AppComponent implements OnInit {
 	setCurrentUser() {
 		const userString = localStorage.getItem('user');
 		if (!userString) return;
-		const user: User = JSON.parse(userString);
+		const user = JSON.parse(userString);
 		this.accountService.setCurrentUser(user);
 	}
 }

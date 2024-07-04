@@ -5,10 +5,10 @@ export class UserParams {
     minAge = 18;
     maxAge = 100;
     pageSize = 6;
-    PageNumber = 1;
+    pageNumber = 1;
     orderBy = "lastActive";
 
-    constructor(user: User) {
+    constructor(user: User | null) {
         this.gender = user.gender;
     }
 }

@@ -14,9 +14,9 @@ namespace API.Controllers
         private readonly SignInManager<AppUser> _signInManager;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
-        public AccountController(UserManager<AppUser> userManager, 
-            SignInManager<AppUser> signInManager, 
-            ITokenService tokenService, 
+        public AccountController(UserManager<AppUser> userManager,
+            SignInManager<AppUser> signInManager,
+            ITokenService tokenService,
             IMapper mapper)
         {
             _mapper = mapper;
@@ -57,11 +57,10 @@ namespace API.Controllers
                 .Include(p => p.Photos)
                 .SingleOrDefaultAsync(x => x.UserName == loginDto.Username.ToLower());
 
-            if (user == null)
-                return Unauthorized("Invalid username");
+            if (user == null || user.UserName == null) return Unauthorized("Invalid username");
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
-            
+
             if (!result.Succeeded) return Unauthorized();
 
             return new UserDto
