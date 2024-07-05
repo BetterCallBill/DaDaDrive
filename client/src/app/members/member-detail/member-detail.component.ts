@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, computed, inject, input } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Member } from '../../_models/member';
 import { TabDirective, TabsModule, TabsetComponent } from 'ngx-bootstrap/tabs';
@@ -10,6 +10,7 @@ import { MessageService } from '../../_services/message.service';
 import { PresenceService } from '../../_services/presence.service';
 import { AccountService } from '../../_services/account.service';
 import { HubConnectionState } from '@microsoft/signalr';
+import { LikesService } from 'src/app/_services/likes.service';
 
 @Component({
 	selector: 'app-member-detail',
@@ -22,13 +23,15 @@ export class MemberDetailComponent implements OnInit, OnDestroy {
 	@ViewChild('memberTabs', { static: true }) memberTabs?: TabsetComponent;
 	private messageService = inject(MessageService);
 	private accountService = inject(AccountService);
+	private likeService = inject(LikesService);
 	presenceService = inject(PresenceService);
 	private route = inject(ActivatedRoute);
 	private router = inject(Router);
 	member: Member = {} as Member;
 	images: GalleryItem[] = [];
 	activeTab?: TabDirective;
-
+	hasLiked = computed(() => this.likeService.likeIds().includes(this.member.id));
+	
 	ngOnInit(): void {
 		this.route.data.subscribe({
 			next: data => {
@@ -85,5 +88,17 @@ export class MemberDetailComponent implements OnInit, OnDestroy {
 
 	ngOnDestroy(): void {
 		this.messageService.stopHubConnection();
+	}
+	
+	toggleLike() {
+		this.likeService.toggleLike(this.member.id).subscribe({
+			next: () => {
+				if (this.hasLiked()) {
+					this.likeService.likeIds.update(ids => ids.filter(x => x !== this.member.id))
+				} else {
+					this.likeService.likeIds.update(ids => [...ids, this.member.id])
+				}
+			}
+		})
 	}
 }
