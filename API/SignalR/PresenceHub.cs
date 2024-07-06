@@ -1,6 +1,6 @@
 using API.Extensions;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.SignalR;
 
