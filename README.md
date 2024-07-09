@@ -1,7 +1,8 @@
 # Live Chat App
 
-This web application is built with ASP.NET and Angular, providing seamless live chat functionality for
-real-time communication.
+Live demo: https://live-chat-app.azurewebsites.net/
+
+This web application is built with ASP.NET and Angular, providing seamless live chat functionality for real-time communication.
 
 Recently updated from .Net 6 + Angular 13 to .Net 8.0 + Angular 18.
 
